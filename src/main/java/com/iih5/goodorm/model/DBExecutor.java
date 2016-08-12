@@ -240,7 +240,7 @@ public class DBExecutor {
      * @return
      */
     public <T> boolean isBaseObject( Class<T> model){
-        String name = model.getTypeName();
+        String name = model.getName();
         if (name.equals("java.lang.String") ||
                 name.equals("java.lang.Integer") ||
                 name.equals("java.lang.Double") ||

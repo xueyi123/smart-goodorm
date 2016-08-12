@@ -2,10 +2,12 @@ package com.iih5.goodorm.model;
 
 import com.alibaba.fastjson.JSON;
 import com.iih5.goodorm.dialect.DefaultDialect;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -153,20 +155,6 @@ public abstract class Model<M extends Model> implements Serializable {
         return (Number) attrs.get(attr);
     }
 
-    public  void  replaceById(){
-
-    }
-    public  void  replaceBy(){
-
-    }
-
-    public  void  sqlInfo(){
-
-    }
-    public  void  replace(){
-
-    }
-
     /**
      * 添加保存到数据库
      * @return 返回保存状态
@@ -249,6 +237,49 @@ public abstract class Model<M extends Model> implements Serializable {
     }
     public boolean updateById(long id) {
         return updateBy("id=?", new Object[]{id});
+    }
+
+    /**
+     * 替换
+     * @param id
+     * @return
+     */
+    public  boolean  replaceById(long id){
+        boolean rt = true;
+        if (findById(id) == null){
+            rt = save();
+        }else {
+            rt = updateById(id);
+        }
+        return rt;
+    }
+
+    /**
+     * 替换
+     * @param condition
+     * @param paras
+     * @return
+     */
+    public  boolean  replaceBy(String condition, Object[] paras){
+        boolean rt = true;
+        if (findBy(condition,paras) == null){
+            rt = save();
+        }else {
+            rt = updateBy(condition, paras);
+        }
+        return rt;
+    }
+
+    /**
+     * 保存并返回自增长ID
+     * @return
+     */
+    public Long saveAndReturnId(){
+        if (save()){
+            String sql="SELECT LAST_INSERT_ID();";
+            return  DB.query(sql,new Object[]{},Long.class);
+        }
+        return null;
     }
 
     /**
@@ -397,25 +428,25 @@ public abstract class Model<M extends Model> implements Serializable {
         cSql.append("select count(*) from ( ");
         cSql.append(sql);
         cSql.append(" ) as t");
-        long size= findBy(cSql.toString(),paras,Long.class);
+        Long size= DB.query(cSql.toString(),paras,Long.class);
         long totalRow=size;
         if (totalRow == 0) {
-            return new Page<T>(new ArrayList<T>(0), pageNumber, pageSize, 0, 0);
+            return new Page<M>(new ArrayList<M>(0), pageNumber, pageSize, 0, 0);
         }
         long totalPage = (totalRow / pageSize);
         if (totalRow % pageSize != 0) {
             totalPage++;
         }
         if (pageNumber > totalPage) {
-            return new Page<T>(new ArrayList<T>(0), pageNumber, pageSize, totalPage, totalRow);
+            return new Page<M>(new ArrayList<M>(0), pageNumber, pageSize, totalPage, totalRow);
         }
 
         long offset = pageSize * (pageNumber - 1);
         StringBuilder ssql = new StringBuilder();
         ssql.append(sql).append(" ");
         ssql.append(" limit ").append(offset).append(", ").append(pageSize);
-        List<T> list = findListBy(ssql.toString(),paras,model);
-        return new Page<T>(list, pageNumber, pageSize, totalPage, totalRow);
+        List list = DB.queryList(ssql.toString(),paras,this.getClass());
+        return new Page<M>(list, pageNumber, pageSize, totalPage, totalRow);
     }
 
     /**
@@ -435,7 +466,7 @@ public abstract class Model<M extends Model> implements Serializable {
         cSql.append("select count(*) from ( ");
         cSql.append(sql);
         cSql.append(" ) as t");
-        long size= findBasicObject(cSql.toString(),paras,Long.class);
+        Long size= DB.query(cSql.toString(),paras,Long.class);
         long totalRow=size;
         if (totalRow == 0) {
             return new Page<Map>(new ArrayList<Map>(0), pageNumber, pageSize, 0, 0);
@@ -451,9 +482,8 @@ public abstract class Model<M extends Model> implements Serializable {
         StringBuilder ssql = new StringBuilder();
         ssql.append(sql).append(" ");
         ssql.append(" limit ").append(offset).append(", ").append(pageSize);
-        List list = findList(ssql.toString(),paras,isNotAttr);
+        List list = DB.queryList(ssql.toString(), paras,Map.class);
         return new Page<Map>(list, pageNumber, pageSize, totalPage, totalRow);
-        return null;
     }
     /**
      * @param o
