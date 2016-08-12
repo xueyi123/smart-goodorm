@@ -1,5 +1,5 @@
 #smart-orm使用说明
-##这是一个orm模型组件，可快速实现SQL操作(支持mysql)
+##这是个基于spring-jdbc 的Java ORM持久化数据模型组件，真正的数据库极速开发模型,支持MySql,同时插件支持Redis
 ##安装
 依赖于spring环境下,在spring.xml配置\<bean class="com.iih5.goodorm.kit.SpringKit"/\>
 ##工作方式
@@ -25,6 +25,6 @@
 <br>【1.0.1】 优化 Model 查询接口(接口参数也有所变动，注意更新)
 <br>【1.0.1】 修改了一些Bug
 ##API查看地址
-http://doc.iih5.com/smart-orm/index.html
+http://doc.iih5.com/smart-goodorm/index.html
 
 
