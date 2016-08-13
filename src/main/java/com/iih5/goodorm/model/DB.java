@@ -84,7 +84,7 @@ public class DB {
      * @return
      */
     public static <T> Page<T> paginate( int pageNumber, int pageSize, String sql, Object[] paras,final Class<T> model) {
-       return defaultExecutor.paginate(model,pageNumber,pageSize,sql,paras);
+       return defaultExecutor.paginate(pageNumber,pageSize,sql,paras,model);
     }
     /**
      * 多表分页查询
