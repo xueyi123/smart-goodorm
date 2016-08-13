@@ -2,11 +2,7 @@ package com.iih5.goodorm.model;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.*;
 
 public class DB {
@@ -26,8 +22,8 @@ public class DB {
     public  static  String getTablePrefix(){
         return defaultExecutor.getTablePrefix();
     }
-    public static TB  TB(String table){
-        return defaultExecutor.TB(table);
+    public static M M(String table){
+        return defaultExecutor.M(table);
     }
 
     public static  <T> List<T> queryList(String sql, Object[] paras, final Class<T> classType) {
@@ -87,7 +83,7 @@ public class DB {
      * @param <T>
      * @return
      */
-    public static <T> Page<T> paginate(final Class<T> model, int pageNumber, int pageSize, String sql, Object[] paras) {
+    public static <T> Page<T> paginate( int pageNumber, int pageSize, String sql, Object[] paras,final Class<T> model) {
        return defaultExecutor.paginate(model,pageNumber,pageSize,sql,paras);
     }
     /**

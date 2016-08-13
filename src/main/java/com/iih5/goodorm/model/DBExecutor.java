@@ -6,7 +6,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -56,9 +55,9 @@ public class DBExecutor {
      * @param table
      * @return
      */
-    public TB  TB(String table){
+    public M M(String table){
         DBExecutor executor = map.get(dataSource);
-        TB tb = new TB(executor,table);
+        M tb = new M(executor,table);
         return tb;
     }
     /**
@@ -93,7 +92,7 @@ public class DBExecutor {
      * @
      */
     public <T> List<T> queryList(String sql, Object[] paras, final Class<T> classType) {
-        if (isBaseObject(classType)){
+        if (BaseUtils.isBaseObject(classType)){
             return jdbc.queryForList(sql, paras, classType);
         }
         final Set<String> columnMeta = new HashSet<String>();
@@ -143,7 +142,7 @@ public class DBExecutor {
      * @
      */
     public <T> T query(String sql, Object[] paras, final Class<T> classType) {
-        if (isBaseObject(classType)){
+        if (BaseUtils.isBaseObject(classType)){
             return jdbc.queryForObject(sql, paras, classType);
         }else {
             List<T> result = queryList(sql, paras, classType);
@@ -181,7 +180,7 @@ public class DBExecutor {
      * @param <T>
      * @return
      */
-    public <T> Page<T> paginate(final Class<T> model, int pageNumber, int pageSize, String sql, Object[] paras) {
+    public <T> Page<T> paginate(int pageNumber, int pageSize, String sql, Object[] paras,final Class<T> model) {
         long size = query(sql, paras, Long.class);
         long totalRow = size;
         if (totalRow == 0) {
@@ -233,34 +232,7 @@ public class DBExecutor {
         List list = queryMapList(ssql.toString(), paras);
         return new Page<Map>(list, pageNumber, pageSize, totalPage, totalRow);
     }
-    /**
-     * 判断是否为基本对象
-     * @param model
-     * @param <T>
-     * @return
-     */
-    public <T> boolean isBaseObject( Class<T> model){
-        String name = model.getName();
-        if (name.equals("java.lang.String") ||
-                name.equals("java.lang.Integer") ||
-                name.equals("java.lang.Double") ||
-                name.equals("java.lang.Float") ||
-                name.equals("java.lang.Long") ||
-                name.equals("java.lang.Short") ||
-                name.equals("java.lang.Boolean") ||
-                name.equals("java.lang.Byte")||
-                name.equals("int")||
-                name.equals("double")||
-                name.equals("float")||
-                name.equals("long")||
-                name.equals("short")||
-                name.equals("boolean")||
-                name.equals("byte")
-                ) {
-            return true;
-        }
-        return false;
-    }
+
 }
 
 

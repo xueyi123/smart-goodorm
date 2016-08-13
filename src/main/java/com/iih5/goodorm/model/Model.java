@@ -2,12 +2,11 @@ package com.iih5.goodorm.model;
 
 import com.alibaba.fastjson.JSON;
 import com.iih5.goodorm.dialect.DefaultDialect;
-
+import com.iih5.goodorm.dialect.MysqlDialect;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -17,9 +16,10 @@ public abstract class Model<M extends Model> implements Serializable {
 
     Map<String, Object> attrs = new HashMap<String, Object>();
     Set<String> modifyFlag = new HashSet<String>();
-    Object[] NULL_PARA_ARRAY = new Object[]{};
     JdbcTemplate jdbcTemplate = null;
     String tableName = null;
+
+    public Model(){}
 
     public Model(DBExecutor dbExecutor,String table) {
         this.tableName = table;
@@ -45,15 +45,50 @@ public abstract class Model<M extends Model> implements Serializable {
         return (M) this;
     }
     /**
-     * 增加
+     * 增加减
      * @param attr
      * @param value
      */
-    public  void  incr(String attr, Object value){
+    public  M  incr(String attr, Object value){
         if (value instanceof String){
             throw new UnsupportedOperationException("只能使用数字类型");
         }
-        set(attr,attr+value);
+        String number = String.valueOf(value);
+        if (number.substring(0,1).equals("-")){
+            set(attr,attr+number);
+        }else {
+            set(attr,attr+"+"+number);
+        }
+
+        return (M)this;
+    }
+    /**
+     * 乘
+     * @param attr
+     * @param value
+     */
+    public  M  mult(String attr, Object value){
+        if (value instanceof String){
+            throw new UnsupportedOperationException("只能使用数字类型");
+        }
+        String number = String.valueOf(value);
+        set(attr,attr+"*"+number);
+
+        return (M)this;
+    }
+    /**
+     * 除
+     * @param attr
+     * @param value
+     */
+    public  M  minus(String attr, Object value){
+        if (value instanceof String){
+            throw new UnsupportedOperationException("只能使用数字类型");
+        }
+        String number = String.valueOf(value);
+        set(attr,attr+"/"+number);
+
+        return (M)this;
     }
     /**
      * @param attr
@@ -154,7 +189,6 @@ public abstract class Model<M extends Model> implements Serializable {
     public Number getNumber(String attr) {
         return (Number) attrs.get(attr);
     }
-
     /**
      * 添加保存到数据库
      * @return 返回保存状态
@@ -176,16 +210,16 @@ public abstract class Model<M extends Model> implements Serializable {
     /**
      * 根据条件删除数据
      *
-     * @param conditions      比如：conditions="userId=? and name=?"
-     * @param conditionValues 比如：new Object[]{1000,'hill'};
+     * @param conditions 比如：conditions="userId=? and name=?"
+     * @param params 比如：new Object[]{1000,'hill'};
      * @return true if delete succeed otherwise false
      */
-    public boolean deleteBy(String conditions, Object[] conditionValues) {
-        if (conditionValues == null || conditionValues.length == 0) {
+    public boolean deleteBy(String conditions, Object[] params) {
+        if (params == null || params.length == 0) {
             return false;
         }
         String sql = DefaultDialect.getDialect().deleteByCondition(tableName, conditions);
-        if (jdbcTemplate.update(sql, conditionValues) < 0) {
+        if (jdbcTemplate.update(sql, params) < 0) {
             return false;
         }
         return true;
@@ -202,8 +236,19 @@ public abstract class Model<M extends Model> implements Serializable {
         return true;
     }
     public boolean deleteByIds(List list) {
-        String st1 = list.toString();
-        String arr = st1.substring(st1.indexOf("[") + 1, st1.indexOf("]"));
+        String str = list.toString();
+        return deleteByIds(str);
+    }
+    public boolean deleteByIds(Long... ids) {
+        String str = JSON.toJSONString(ids) ;
+        return deleteByIds(str);
+    }
+    public boolean deleteByIds(Integer... ids) {
+        String str = JSON.toJSONString(ids) ;
+        return deleteByIds(str);
+    }
+     boolean deleteByIds(String str) {
+        String arr = str.substring(str.indexOf("[") + 1, str.indexOf("]"));
         StringBuilder sql = new StringBuilder();
         sql.append("delete from ");
         sql.append(tableName);
@@ -216,20 +261,21 @@ public abstract class Model<M extends Model> implements Serializable {
         }
         return true;
     }
+
     /**
      * 根据条件修改数据
      *
      * @param conditions      比如：conditions="userId=? and name=?"
-     * @param conditionValues 比如：new Object[]{1000,'hill'};
+     * @param params 比如：new Object[]{1000,'hill'};
      * @return true if delete succeed otherwise false
      */
-    public boolean updateBy(String conditions, Object[] conditionValues) {
+    public boolean updateBy(String conditions, Object[] params) {
         if (getModifyFlag().isEmpty()) {
             return false;
         }
         StringBuilder sql = new StringBuilder();
         DefaultDialect.getDialect().forModelUpdate(tableName, conditions, attrs, getModifyFlag(), sql);
-        if (jdbcTemplate.update(sql.toString(), conditionValues) < 0) {
+        if (jdbcTemplate.update(sql.toString(), params) < 0) {
             return false;
         } else {
             return true;
@@ -238,7 +284,6 @@ public abstract class Model<M extends Model> implements Serializable {
     public boolean updateById(long id) {
         return updateBy("id=?", new Object[]{id});
     }
-
     /**
      * 替换
      * @param id
@@ -253,7 +298,6 @@ public abstract class Model<M extends Model> implements Serializable {
         }
         return rt;
     }
-
     /**
      * 替换
      * @param condition
@@ -269,7 +313,6 @@ public abstract class Model<M extends Model> implements Serializable {
         }
         return rt;
     }
-
     /**
      * 保存并返回自增长ID
      * @return
@@ -281,37 +324,8 @@ public abstract class Model<M extends Model> implements Serializable {
         }
         return null;
     }
-
-    /**
-     * 删除属性值
-     *
-     * @param attr
-     * @return this model
-     */
-    public M removeAttr(String attr) {
-        attrs.remove(attr);
-        getModifyFlag().remove(attr);
-        return (M) this;
-    }
-
-    /**
-     * 删除属性值
-     *
-     * @param attrs
-     * @return this model
-     */
-    public M removeAttr(String... attrs) {
-        if (attrs != null)
-            for (String a : attrs) {
-                this.attrs.remove(a);
-                this.getModifyFlag().remove(a);
-            }
-        return (M) this;
-    }
-
     /**
      * 清空所有的属性值
-     *
      * @return
      */
     public M clear() {
@@ -319,7 +333,6 @@ public abstract class Model<M extends Model> implements Serializable {
         getModifyFlag().clear();
         return (M) this;
     }
-
     /**
      * @param columns  字段名称，比如 columns="id,name,age"
      * @param conditions  conditions 查询条件，比如 conditions="user_id=? and age=?"
@@ -331,7 +344,6 @@ public abstract class Model<M extends Model> implements Serializable {
         List<M> result = findListBy(columns, conditions, paras);
         return result.size() > 0 ? result.get(0) : null;
     }
-
     /**
      * @param conditions     conditions 查询条件，比如 conditions="user_id=? and age=?"
      * @param paras 查询条件对应的参数
@@ -342,11 +354,30 @@ public abstract class Model<M extends Model> implements Serializable {
         List<M> result = findListBy(conditions, paras);
         return result.size() > 0 ? result.get(0) : null;
     }
-
+    /**
+     * 根据ID查找
+     * @param id
+     * @return
+     */
     public M findById(long id) {
         return findBy("id=?",new Object[]{id});
     }
-
+    /**
+     * 获取基本类型数值
+     * @param columns 表字段
+     * @param conditions 条件
+     * @param paras 条件参数
+     * @param classType 基本类型
+     * @param <T>
+     * @return
+     */
+    public <T> T findBy(String columns,String conditions, Object[] paras, final Class<T> classType) {
+        if (!BaseUtils.isBaseObject(classType)){
+          throw new UnsupportedOperationException(classType.getName()+"非法类型，只允许基本数值类型（包含String）");
+        }
+        String sql = DefaultDialect.getDialect().forModelFindBy(tableName, columns, conditions);
+        return jdbcTemplate.queryForObject(sql, paras, classType);
+    }
     /**
      * 查找Model对象列表
      *
@@ -387,7 +418,6 @@ public abstract class Model<M extends Model> implements Serializable {
             }
         });
     }
-
     /**
      * 查找Model对象列表
      *
@@ -399,18 +429,17 @@ public abstract class Model<M extends Model> implements Serializable {
     public List<M> findListBy(String conditions, Object[] params) {
         return findListBy("*", conditions, params);
     }
-
     /**
      * 获取Map格式列表(不包含attrs包裹属性)
      *
-     * @param sql
+     * @param condition
      * @param paras
      * @return
      */
-    public List<Map<String, Object>> findMapListBy(String sql, Object[] paras) {
+    public List<Map<String, Object>> findMapListBy(String condition, Object[] paras) {
+        String sql = DefaultDialect.getDialect().forModelFindBy(tableName,"*",condition);
         return jdbcTemplate.queryForList(sql, paras);
     }
-
     /**
      * 分页查询
      *
@@ -423,6 +452,9 @@ public abstract class Model<M extends Model> implements Serializable {
      * @
      */
     public Page<M> paginate(int pageNumber, int pageSize, String columns, String conditions, Object[] paras) {
+        if (pageNumber<=0){
+            pageNumber=1;
+        }
         String sql = DefaultDialect.getDialect().forModelFindBy(tableName, columns, conditions);
         StringBuffer cSql=new StringBuffer();
         cSql.append("select count(*) from ( ");
@@ -448,7 +480,6 @@ public abstract class Model<M extends Model> implements Serializable {
         List list = DB.queryList(ssql.toString(),paras,this.getClass());
         return new Page<M>(list, pageNumber, pageSize, totalPage, totalRow);
     }
-
     /**
      * 分页查询
      *
@@ -461,6 +492,9 @@ public abstract class Model<M extends Model> implements Serializable {
      * @
      */
     public Page<Map> paginateMap(int pageNumber, int pageSize, String columns, String conditions, Object[] paras) {
+        if (pageNumber<=0){
+            pageNumber=1;
+        }
         String sql = DefaultDialect.getDialect().forModelFindBy(tableName, columns, conditions);
         StringBuffer cSql=new StringBuffer();
         cSql.append("select count(*) from ( ");
@@ -482,7 +516,7 @@ public abstract class Model<M extends Model> implements Serializable {
         StringBuilder ssql = new StringBuilder();
         ssql.append(sql).append(" ");
         ssql.append(" limit ").append(offset).append(", ").append(pageSize);
-        List list = DB.queryList(ssql.toString(), paras,Map.class);
+        List list = DB.queryMapList(ssql.toString(), paras);
         return new Page<Map>(list, pageNumber, pageSize, totalPage, totalRow);
     }
     /**
@@ -498,14 +532,12 @@ public abstract class Model<M extends Model> implements Serializable {
             return true;
         return this.attrs.equals(((Model) o).attrs);
     }
-
     /**
      * @return
      */
     public int hashCode() {
         return (attrs == null ? 0 : attrs.hashCode()) ^ (getModifyFlag() == null ? 0 : getModifyFlag().hashCode());
     }
-
     /**
      * 转换为json字符串
      *
@@ -514,7 +546,6 @@ public abstract class Model<M extends Model> implements Serializable {
     public String toString() {
         return JSON.toJSONString(this.getAttrs());
     }
-
     /**
      * @return
      */
