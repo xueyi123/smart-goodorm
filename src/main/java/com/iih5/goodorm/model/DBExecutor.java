@@ -60,6 +60,27 @@ public class DBExecutor {
         M tb = new M(executor,table);
         return tb;
     }
+
+    /**
+     * 创建关联查询对象
+     * @param um
+     * @param <T>
+     * @return
+     */
+    public <T> T  UM(Class<T> um){
+        try {
+            String name = um.getSuperclass().getSimpleName();
+            if (!name.equals("UM")){
+                throw new InstantiationException("必须继承关联查询的基类UM.java");
+            }
+            return (T)um.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     /**
      * 返回JdbcTemplate
      *

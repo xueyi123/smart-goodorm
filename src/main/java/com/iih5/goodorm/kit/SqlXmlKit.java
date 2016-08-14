@@ -40,15 +40,12 @@ public class SqlXmlKit {
                 SAXReader reader = new SAXReader();
                 Document document = reader.read(file);
                 Element xmlRoot = document.getRootElement();
-                for (Object e: xmlRoot.elements("class")) {
-                    Map<String,String> methods= new HashMap<String, String>();
-                    Element clasz= (Element)e;
-                    for (Object ebj:clasz.elements("sql")) {
-                        Element sql= (Element)ebj;
-                        methods.put(sql.attribute("method").getValue(), sql.getText());
-                    }
-                    resourcesMap.put(clasz.attributeValue("name"),methods);
+                Map<String,String> methods= new HashMap<String, String>();
+                for (Object ebj:xmlRoot.elements("sql")) {
+                    Element sql= (Element)ebj;
+                    methods.put(sql.attribute("method").getValue(), sql.getText());
                 }
+                resourcesMap.put(file.getName().replace(".xml",""),methods);
            }
         }
         } catch (Exception e) {
@@ -75,25 +72,26 @@ public class SqlXmlKit {
 
     /**
      * 获取sql语句
-     * @param classPath 类package全路径
-     * @param methodName 方法名字
+     * @param className 类指针
+     * @param method 方法名字
      * @return 返回配置的sql语句
      */
-    public static String getSQL(String classPath,String methodName) {
-       Map<String,String> m= resourcesMap.get(classPath);
-        return  m.get(methodName);
+    public static String getSQL(String className,String method) {
+        String name = className;
+        Map<String,String> m = resourcesMap.get(name);
+        return  m.get(method);
     }
 
     /**
      * 获取sql语句
      * @return
      */
-    public static String getCurrentSql(){
+    public static String thisSQL(){
         //获取调用调用此方法的上一级类
-        String clazz= Thread.currentThread().getStackTrace()[2].getClassName();
-        //获取调用getSQL方法的上一级方法
+        String name = Thread.currentThread().getStackTrace()[2].getFileName().replace(".java","");
+        //获取调用thisSQL方法的上一级方法
         String method= Thread.currentThread().getStackTrace()[2].getMethodName();
-       return  SpringKit.getApplicationContext().getBean(SqlXmlKit.class).getSQL(clazz,method);
+       return  getSQL(name,method);
     }
 }
 
