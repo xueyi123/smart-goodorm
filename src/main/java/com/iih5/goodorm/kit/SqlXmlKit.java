@@ -21,6 +21,10 @@ public class SqlXmlKit {
     public SqlXmlKit(){
         try {
             URL url=Thread.currentThread().getContextClassLoader().getResource("sql");
+            if (url == null){
+                Logger.getLogger(SqlXmlKit.class).warn("找不到sql文件目录！");
+                return;
+            }
             File dataDir = new File(url.toURI());
             init(dataDir);
         }catch (Exception e){

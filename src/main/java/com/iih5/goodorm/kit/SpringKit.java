@@ -11,6 +11,14 @@ import javax.sql.DataSource;
  * 载入spring插件
  */
 public class SpringKit implements ApplicationContextAware {
+	SqlXmlKit sqlXmlKit = null;
+	public SpringKit(){
+		sqlXmlKit = new SqlXmlKit();
+	}
+	public SpringKit(String sqlPath){
+		 sqlXmlKit = new SqlXmlKit(sqlPath);
+	}
+
 	private static ApplicationContext appContext = null;
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		appContext = applicationContext;
