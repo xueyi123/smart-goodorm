@@ -1,14 +1,14 @@
-#smart-orm使用说明
-##这是个基于spring-jdbc 的Java ORM持久化数据模型组件，真正的数据库极速开发模型,支持MySql,同时插件支持Redis
+#smart-goodorm使用说明
+##这是个基于SpringJdbc的Java ORM持久化数据模型组件，真正的数据库极速开发模型,支持MySql,另外也支持Redis
 ##安装
-依赖于spring环境下,在spring.xml配置\<bean class="com.iih5.goodorm.kit.SpringKit"/\>
+依赖于spring环境下,在spring.xml配置<bean class="com.iih5.goodorm.kit.SpringKit"/>
 ##工作方式
-##1基于Model操作数据库
-<br>1 UserModel user =new UserModel();
-<br> user.coin=65800;
-<br> user.nick_name="哈林";
-<br> user.save();
-<br>2 VerifyCodeModel model = new VerifyCodeModel().find("select *from t_verify_code where id=13",VerifyCodeModel.class);
+##单表操作数据库
+<br> DB.M("t_user").set("name","cat").save();
+<br> DB.M("t_user").set("name","cat").updateById(10001);
+<br> DB.M("t_user").set("name","cat").replaceById(10001);
+<br> DB.M("t_user").findById(10001);
+<br> DB.M("t_user").deleteById(10001);
 ##2 基于Db操作数据库
 <br>1 List<VerifyCodeModel> model= Db.findList("select *from t_verify_code",new Object[]{},VerifyCodeModel.class);
 <br>2 Page<VerifyCodeModel> modelPage= Db.use("dataSource").paginate(VerifyCodeModel.class,1,6,"select *from t_verify_code",new Object[]{});
