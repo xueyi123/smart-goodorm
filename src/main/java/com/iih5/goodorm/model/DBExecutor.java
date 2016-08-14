@@ -103,7 +103,7 @@ public class DBExecutor {
         return  tablePrefix;
     }
     /**
-     * 查找Model对象列表
+     * 查找关联查询对象列表
      *
      * @param sql
      * @param paras
@@ -116,6 +116,14 @@ public class DBExecutor {
         if (BaseUtils.isBaseObject(classType)){
             return jdbc.queryForList(sql, paras, classType);
         }
+        String name = classType.getSuperclass().getSimpleName();
+        if (!name.equals("UM")){
+            try {
+                throw new InstantiationException("必须继承关联查询的基类UM.java");
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+        }
         final Set<String> columnMeta = new HashSet<String>();
         return jdbc.query(sql, paras, new RowMapper<T>() {
             public T mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -126,15 +134,15 @@ public class DBExecutor {
                             columnMeta.add(column);
                         }
                     }
-                    Model mModel = (Model) classType.newInstance();
+                    UM um = (UM) classType.newInstance();
                     ResultSetMetaData rad = rs.getMetaData();
                     int columnCount = rad.getColumnCount();
-                    Map<String, Object> attrs = mModel.getAttrs();
+                    Map<String, Object> attrs = um.getAttrs();
                     for (int i = 1; i <= columnCount; i++) {
                         Object value = rs.getObject(i);
                         attrs.put(rad.getColumnName(i), value);
                     }
-                    return (T) mModel;
+                    return (T) um;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
