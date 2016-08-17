@@ -6,6 +6,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,9 +19,18 @@ import java.util.Map;
 public class SqlXmlKit {
     // map<className,<method,sql>>
     private static   HashMap<String, Map<String, String>> resourcesMap = new HashMap<String, Map<String, String>>();
+    private static boolean debug = false;
+    private static String sqlDir = "sql";
     public SqlXmlKit(){
+        kk();
+    }
+    public SqlXmlKit(boolean isDebug){
+        debug = isDebug;
+       kk();
+    }
+    private void kk(){
         try {
-            URL url=Thread.currentThread().getContextClassLoader().getResource("sql");
+            URL url=Thread.currentThread().getContextClassLoader().getResource(sqlDir);
             if (url == null){
                 Logger.getLogger(SqlXmlKit.class).warn("找不到sql文件目录！");
                 return;
@@ -32,8 +42,10 @@ public class SqlXmlKit {
             Logger.getLogger(SqlXmlKit.class).error("读取sql xml 文件异常");
         }
     }
-    public SqlXmlKit(String path){
-        init(new File(path));
+    public SqlXmlKit(String path,boolean isDebug){
+        debug = isDebug;
+        sqlDir = path;
+        init(new File(sqlDir));
     }
     private void init(File dataDir)  {
         try {
@@ -47,7 +59,9 @@ public class SqlXmlKit {
                 Map<String,String> methods= new HashMap<String, String>();
                 for (Object ebj:xmlRoot.elements("sql")) {
                     Element sql= (Element)ebj;
-                    methods.put(sql.attribute("method").getValue(), sql.getText());
+                    String text = sql.getText();
+                    String rs = text.replaceAll("<!\\[CDATA\\[","").replaceAll("\\]\\]>","");
+                    methods.put(sql.attribute("method").getValue(),rs);
                 }
                 resourcesMap.put(file.getName().replace(".xml",""),methods);
            }
@@ -83,6 +97,9 @@ public class SqlXmlKit {
     public static String getSQL(String className,String method) {
         String name = className;
         Map<String,String> m = resourcesMap.get(name);
+        if (debug) {
+            return loadSqlByDebug(name,method);
+        }
         return  m.get(method);
     }
 
@@ -97,6 +114,33 @@ public class SqlXmlKit {
         String method= Thread.currentThread().getStackTrace()[2].getMethodName();
        return  getSQL(name,method);
     }
+    private static  String loadSqlByDebug(String fileName,String method){
+        String path = sqlDir+"/"+fileName+".xml";
+        URL url = Thread.currentThread().getContextClassLoader().getResource(path);
+        if (url == null){
+            Logger.getLogger(SqlXmlKit.class).warn("找不到文件:"+path);
+            return null;
+        }
+        try {
+            File file = new File(url.toURI());
+            SAXReader reader = new SAXReader();
+            Document document = reader.read(file);
+            Element xmlRoot = document.getRootElement();
+            for (Object ebj:xmlRoot.elements("sql")) {
+                Element sql= (Element)ebj;
+                String methodName = sql.attribute("method").getValue().trim();
+                if (method.equals(methodName)){
+                    String text = sql.getText();
+                    String rs = text.replaceAll("<!\\[CDATA\\[","").replaceAll("\\]\\]>","");
+                    return rs;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
 
 
