@@ -6,6 +6,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -116,15 +117,14 @@ public class SqlXmlKit {
     }
     private static  String loadSqlByDebug(String fileName,String method){
         String path = sqlDir+"/"+fileName+".xml";
-        URL url = Thread.currentThread().getContextClassLoader().getResource(path);
-        if (url == null){
+       InputStream in= Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
+        if (in == null){
             Logger.getLogger(SqlXmlKit.class).warn("找不到文件:"+path);
             return null;
         }
         try {
-            File file = new File(url.toURI());
             SAXReader reader = new SAXReader();
-            Document document = reader.read(file);
+            Document document = reader.read(in);
             Element xmlRoot = document.getRootElement();
             for (Object ebj:xmlRoot.elements("sql")) {
                 Element sql= (Element)ebj;
