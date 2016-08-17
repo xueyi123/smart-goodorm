@@ -15,8 +15,11 @@ public class SpringKit implements ApplicationContextAware {
 	public SpringKit(){
 		sqlXmlKit = new SqlXmlKit();
 	}
-	public SpringKit(String sqlPath){
-		 sqlXmlKit = new SqlXmlKit(sqlPath);
+	public SpringKit(boolean isDebug){
+		sqlXmlKit = new SqlXmlKit(isDebug);
+	}
+	public SpringKit(String sqlPath,boolean isDebug){
+		 sqlXmlKit = new SqlXmlKit(sqlPath,isDebug);
 	}
 
 	private static ApplicationContext appContext = null;
