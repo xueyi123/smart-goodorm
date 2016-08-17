@@ -7,7 +7,7 @@
     <groupId>com.iih5</groupId>
     <artifactId>smart-goodorm</artifactId>
 
-    <version>1.0</version>
+    <version>1.2</version>
     <name>smart-goodorm</name>
     <description>这是个基于spring-jdbc 的Java ORM持久化数据模型组件，简单易用，可快速实现SQL操作,真正的数据库极速开发模型,支持MySql和同时插件支持Redis</description>
     <url>http://www.iih5.com/</url>
