@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public  class UM implements Serializable {
+public  class UnionModel implements Serializable {
     Map<String, Object> attrs = new HashMap<String, Object>();
     public Map<String, Object> getAttrs() {
         return attrs;

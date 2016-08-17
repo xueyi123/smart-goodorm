@@ -25,9 +25,6 @@ public class DB {
     public static M M(String table){
         return defaultExecutor.M(table);
     }
-    public static <T> T  UM(Class<T> um){
-        return defaultExecutor.UM(um);
-    }
 
     public static  <T> List<T> queryList(String sql, Object[] paras, final Class<T> classType) {
        return defaultExecutor.queryList(sql,paras,classType);

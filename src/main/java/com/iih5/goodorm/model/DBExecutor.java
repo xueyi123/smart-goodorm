@@ -62,26 +62,6 @@ public class DBExecutor {
     }
 
     /**
-     * 创建关联查询对象
-     * @param um
-     * @param <T>
-     * @return
-     */
-    public <T> T  UM(Class<T> um){
-        try {
-            String name = um.getSuperclass().getSimpleName();
-            if (!name.equals("UM")){
-                throw new InstantiationException("必须继承关联查询的基类UM.java");
-            }
-            return (T)um.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    /**
      * 返回JdbcTemplate
      *
      * @param
@@ -117,7 +97,7 @@ public class DBExecutor {
             return jdbc.queryForList(sql, paras, classType);
         }
         String name = classType.getSuperclass().getSimpleName();
-        if (!name.equals("UM")){
+        if (!name.equals("UnionModel")){
             try {
                 throw new InstantiationException("必须继承关联查询的基类UM.java");
             } catch (InstantiationException e) {
@@ -134,7 +114,7 @@ public class DBExecutor {
                             columnMeta.add(column);
                         }
                     }
-                    UM um = (UM) classType.newInstance();
+                    UnionModel um = (UnionModel) classType.newInstance();
                     ResultSetMetaData rad = rs.getMetaData();
                     int columnCount = rad.getColumnCount();
                     Map<String, Object> attrs = um.getAttrs();
