@@ -1280,5 +1280,8 @@ public class RedisExecutor {
         return d;
     }
 
+    public Jedis getJedis(){
+        return pool.getResource();
+    }
 
 }
