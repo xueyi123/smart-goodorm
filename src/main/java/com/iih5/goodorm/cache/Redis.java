@@ -759,4 +759,8 @@ public class Redis {
         return defaultExecutor.hgetAll(key);
     }
 
+    public static Jedis getJedis(){
+        return defaultExecutor.getJedis();
+    }
+
 }
