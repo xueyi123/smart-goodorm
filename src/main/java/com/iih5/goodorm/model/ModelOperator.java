@@ -2,7 +2,8 @@ package com.iih5.goodorm.model;
 
 import com.alibaba.fastjson.JSON;
 import com.iih5.goodorm.dialect.DefaultDialect;
-import com.iih5.goodorm.dialect.MysqlDialect;
+import com.iih5.goodorm.kit.StringKit;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -12,23 +13,42 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 
-public abstract class Model<M extends Model> implements Serializable {
+public abstract class ModelOperator<M extends ModelOperator> implements Serializable {
 
     Map<String, Object> attrs = new HashMap<String, Object>();
+    Object modelBean;
     Set<String> modifyFlag = new HashSet<String>();
     JdbcTemplate jdbcTemplate = null;
     String tableName = null;
 
-    public Model(){}
+    public ModelOperator(){}
 
-    public Model(DBExecutor dbExecutor,String table) {
+    public ModelOperator(DBExecutor dbExecutor, String table) {
         this.tableName = table;
+        this.jdbcTemplate = dbExecutor.getJdbcTemplate();
+    }
+
+    public ModelOperator(DBExecutor dbExecutor, BaseModel model) {
+        String table = null;
+        try {
+            table = model.getTableName();
+            if (StringUtils.isBlank(table)){
+                table = DB.getTablePrefix()+StringKit.toTableNameByModel(model.getClass().class.getSimpleName());
+            }
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        this.tableName = table;
+        modelBean = model;
         this.jdbcTemplate = dbExecutor.getJdbcTemplate();
     }
 
     public Map<String, Object> getAttrs() {
         return attrs;
     }
+
     private Set<String> getModifyFlag() {
         return modifyFlag;
     }
@@ -400,7 +420,7 @@ public abstract class Model<M extends Model> implements Serializable {
                             columnMeta.add(column);
                         }
                     }
-                    Model<?> mModel = getUsefulClass().newInstance();
+                    ModelOperator<?> mModel = getUsefulClass().newInstance();
                     ResultSetMetaData rsmd = rs.getMetaData();
                     int columnCount = rsmd.getColumnCount();
                     Map<String, Object> attrs = mModel.getAttrs();
@@ -524,13 +544,13 @@ public abstract class Model<M extends Model> implements Serializable {
      * @return
      */
     public boolean equals(Object o) {
-        if (!(o instanceof Model))
+        if (!(o instanceof ModelOperator))
             return false;
-        if (getUsefulClass() != ((Model) o).getUsefulClass())
+        if (getUsefulClass() != ((ModelOperator) o).getUsefulClass())
             return false;
         if (o == this)
             return true;
-        return this.attrs.equals(((Model) o).attrs);
+        return this.attrs.equals(((ModelOperator) o).attrs);
     }
     /**
      * @return
@@ -549,7 +569,7 @@ public abstract class Model<M extends Model> implements Serializable {
     /**
      * @return
      */
-    private Class<? extends Model> getUsefulClass() {
+    private Class<? extends ModelOperator> getUsefulClass() {
         Class c = getClass();
         return c.getName().indexOf("EnhancerByCGLIB") == -1 ? c : c.getSuperclass();
     }

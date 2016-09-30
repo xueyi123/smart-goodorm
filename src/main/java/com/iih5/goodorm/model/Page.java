@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Page is the result of Model.paginate(......) or DB.paginate(......)
+ * Page is the result of ModelOperator.paginate(......) or DB.paginate(......)
  */
 public class Page<T> implements Serializable {
 	

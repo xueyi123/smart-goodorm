@@ -1,5 +1,7 @@
 package com.iih5.goodorm.generator;
 
+import com.iih5.goodorm.kit.StringKit;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -48,7 +50,7 @@ public class ModelGenerator {
     protected static void writeToFile(String content,TableMeta tableMeta,String outputDir) throws IOException {
         File dir = new File(outputDir);
         dir.mkdirs();
-        String target = outputDir + File.separator + tableMeta.name + ".java";
+        String target = outputDir + File.separator + StringKit.toModelNameByTable(tableMeta.name) + "ModelOperator.java";
         FileWriter fw = new FileWriter(target);
         try {
             fw.write(content);

@@ -13,16 +13,17 @@ public class DB {
     public static DBExecutor use(String dataSource){
         return DBExecutor.use(dataSource);
     }
-    public static DBExecutor use(String dataSource,String prefix){
-        return DBExecutor.use(dataSource,prefix);
-    }
     public static JdbcTemplate getJdbcTemplate(){
         return  defaultExecutor.getJdbcTemplate();
     }
+    private static String tablePrefix = "";   //设置表前缀
     public  static  String getTablePrefix(){
-        return defaultExecutor.getTablePrefix();
+        return tablePrefix;
     }
-    public static M M(String table){
+    public static void setTablePrefix(String prefix){
+        tablePrefix = prefix;
+    }
+    public static Table M(String table){
         return defaultExecutor.M(table);
     }
 

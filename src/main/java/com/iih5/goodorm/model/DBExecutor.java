@@ -14,7 +14,6 @@ import java.util.*;
 public class DBExecutor {
     private static Map<String, DBExecutor> map = new HashMap<String, DBExecutor>();
     public JdbcTemplate jdbc = null;
-    public String tablePrefix = "t_";
     public String dataSource = null;
 
     /**
@@ -33,19 +32,6 @@ public class DBExecutor {
         }
         return executor;
     }
-
-    public static DBExecutor use(String dataSource, String prefix) {
-        DBExecutor executor = map.get(dataSource);
-        if (executor == null) {
-            executor = new DBExecutor();
-            executor.jdbc = SpringKit.getJdbcTemplateByDataSource(dataSource);
-            executor.dataSource = dataSource;
-            executor.tablePrefix = prefix;
-            map.put(dataSource, executor);
-        }
-        return executor;
-    }
-
     public static DBExecutor use() {
         String[] dbs = SpringKit.getApplicationContext().getBeanNamesForType(DataSource.class);
         return use(dbs[0]);
@@ -55,9 +41,9 @@ public class DBExecutor {
      * @param table
      * @return
      */
-    public M M(String table){
+    public Table M(String table){
         DBExecutor executor = map.get(dataSource);
-        M tb = new M(executor,table);
+        Table tb = new Table(executor,table);
         return tb;
     }
 
@@ -76,13 +62,6 @@ public class DBExecutor {
     }
 
     /**
-     * 获取当前表前缀
-     * @return
-     */
-    public String getTablePrefix(){
-        return  tablePrefix;
-    }
-    /**
      * 查找关联查询对象列表
      *
      * @param sql
@@ -96,14 +75,14 @@ public class DBExecutor {
         if (BaseUtils.isBaseObject(classType)){
             return jdbc.queryForList(sql, paras, classType);
         }
-        String name = classType.getSuperclass().getSimpleName();
-        if (!name.equals("UnionModel")){
-            try {
-                throw new InstantiationException("必须继承关联查询的基类UM.java");
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            }
-        }
+//        String name = classType.getSuperclass().getSimpleName();
+//        if (!name.equals("UnionModel")){
+//            try {
+//                throw new InstantiationException("必须继承关联查询的基类UM.java");
+//            } catch (InstantiationException e) {
+//                e.printStackTrace();
+//            }
+//        }
         final Set<String> columnMeta = new HashSet<String>();
         return jdbc.query(sql, paras, new RowMapper<T>() {
             public T mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -114,8 +93,10 @@ public class DBExecutor {
                             columnMeta.add(column);
                         }
                     }
+
                     UnionModel um = (UnionModel) classType.newInstance();
                     ResultSetMetaData rad = rs.getMetaData();
+
                     int columnCount = rad.getColumnCount();
                     Map<String, Object> attrs = um.getAttrs();
                     for (int i = 1; i <= columnCount; i++) {

@@ -1,4 +1,5 @@
 package com.iih5.goodorm.generator;
+
 import java.util.ArrayList;
 import java.util.List;
 
